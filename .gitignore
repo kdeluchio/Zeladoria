@@ -1,0 +1,74 @@
+# Build
+bin/
+obj/
+[Ll]og/
+*.log
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider
+.idea/
+
+# ASP.NET Secrets
+secrets.json
+
+# IIS
+.vsconfig
+.vscode/
+
+# Publish
+*.publishsettings
+
+# NuGet
+*.nupkg
+packages/
+*.snupkg
+
+# DotCover
+*.dotCover
+
+# Others
+*.DS_Store
+*.swp
+*.bak
+*.tmp
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# dotnet user secrets
+**/secrets.json
+
+# Entity Framework Migrations (optional)
+#migrations/
+
+# Test results
+TestResults/
+
+# Local DB
+*.mdf
+*.ldf
+
+# Logs and temp
+*.log
+*.tlog
+*.cache
+*.vsidx
+
+# Windows thumbnails
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+docker-compose.override.*.yml
