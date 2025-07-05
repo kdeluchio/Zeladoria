@@ -24,6 +24,10 @@ public static class OrderEndpoints
             try
             {
                 var createdOrder = await orderService.CreateOrderAsync(order);
+                if (orderService.HasError)
+                {
+                    return Results.ValidationProblem(orderService.Errors);
+                }
                 return Results.Created($"/order/{createdOrder.Id}", createdOrder);
             }
             catch (Exception ex)
@@ -37,6 +41,10 @@ public static class OrderEndpoints
             try
             {
                 var updatedOrder = await orderService.UpdateOrderAsync(id, order);
+                if (orderService.HasError)
+                {
+                    return Results.ValidationProblem(orderService.Errors);
+                }
                 return Results.Ok(updatedOrder);
             }
             catch (ArgumentException)

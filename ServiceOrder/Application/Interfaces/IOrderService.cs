@@ -2,7 +2,7 @@ using ServiceOrder.Application.Models;
 
 namespace ServiceOrder.Application.Interfaces;
 
-public interface IOrderService
+public interface IOrderService: IServiceBase
 {
     Task<OrderResponseModel> CreateOrderAsync(CreateOrderModel createOrderModel);
     Task<OrderResponseModel?> GetOrderByIdAsync(string id);

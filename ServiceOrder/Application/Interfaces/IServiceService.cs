@@ -2,7 +2,7 @@ using ServiceOrder.Application.Models;
 
 namespace ServiceOrder.Application.Interfaces;
 
-public interface IServiceService
+public interface IServiceService: IServiceBase
 {
     Task<ServiceResponseModel> CreateServiceAsync(CreateServiceModel createServiceModel);
     Task<ServiceResponseModel?> GetServiceByIdAsync(string id);

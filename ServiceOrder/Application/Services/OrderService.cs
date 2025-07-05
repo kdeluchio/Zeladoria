@@ -1,20 +1,38 @@
+using FluentValidation;
 using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
+using System.ComponentModel.DataAnnotations;
 
 namespace ServiceOrder.Application.Services;
 
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly IValidator<CreateOrderModel> _validator;
+    private bool _hasError;
+    private Dictionary<string, string[]> _errors;
 
-    public OrderService(IOrderRepository orderRepository)
+    public bool HasError { get => _hasError; }
+    public Dictionary<string, string[]> Errors { get => _errors; }
+
+    public OrderService(IOrderRepository orderRepository, IValidator<CreateOrderModel> validator)
     {
         _orderRepository = orderRepository;
+        _validator = validator;
+        _errors = new Dictionary<string, string[]>();
     }
 
     public async Task<OrderResponseModel> CreateOrderAsync(CreateOrderModel createOrderModel)
     {
+        var validationResult = await _validator.ValidateAsync(createOrderModel);
+        if (!validationResult.IsValid)
+        {
+            _hasError = true;
+            _errors = validationResult.Errors
+                .ToDictionary(e => e.PropertyName, e => new[] { e.ErrorMessage });
+            return default;
+        }
         var order = new Order(
             createOrderModel.CustomerId,
             createOrderModel.Description,
@@ -106,4 +124,4 @@ public class OrderService : IOrderService
             CompletedAt = order.CompletedAt
         };
     }
-} 
+}

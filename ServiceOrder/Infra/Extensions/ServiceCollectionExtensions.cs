@@ -1,8 +1,11 @@
 using MongoDB.Driver;
 using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Services;
+using ServiceOrder.Application.Validators;
 using ServiceOrder.Infra.Data;
 using ServiceOrder.Infra.Data.Repositories;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 
 namespace ServiceOrder.Infra.Extensions;
 
@@ -29,6 +32,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IServiceRepository, ServiceRepository>();
         services.AddScoped<IServiceService, ServiceService>();
+        services.AddFluentValidationAutoValidation();
+        services.AddValidatorsFromAssemblyContaining<CreateOrderModelValidator>();
+        services.AddValidatorsFromAssemblyContaining<CreateServiceModelValidator>();
         
         return services;
     }
