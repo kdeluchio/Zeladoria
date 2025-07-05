@@ -1,7 +1,8 @@
 using FluentValidation;
-using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
+using ServiceOrder.Domain.Interfaces;
+using ServiceOrder.Domain.Models;
 
 namespace ServiceOrder.Application.Services;
 
@@ -9,69 +10,73 @@ public class ServiceService : IServiceService
 {
     private readonly IServiceRepository _serviceRepository;
     private readonly IValidator<CreateServiceModel> _validator;
-    private bool _hasError;
-    private Dictionary<string, string[]> _errors;
-
-    public bool HasError { get => _hasError; }
-    public Dictionary<string, string[]> Errors { get => _errors; }
 
     public ServiceService(IServiceRepository serviceRepository, IValidator<CreateServiceModel> validator)
     {
         _serviceRepository = serviceRepository;
         _validator = validator;
-        _errors = new Dictionary<string, string[]>();
     }
 
-    public async Task<ServiceResponseModel> CreateServiceAsync(CreateServiceModel createServiceModel)
+    public async Task<Result<ServiceResponseModel>> CreateServiceAsync(CreateServiceModel request)
     {
-        var validationResult = await _validator.ValidateAsync(createServiceModel);
-        if (!validationResult.IsValid)
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
         {
-            _hasError = true;
-            _errors = validationResult.Errors
-                .ToDictionary(e => e.PropertyName, e => new[] { e.ErrorMessage });
-            return default;
+            var validationErrors = validation.Errors
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return Result<ServiceResponseModel>.Failure(validationErrors);
         }
 
-        var service = new Service(createServiceModel.Name);
+        var service = new Service(request.Name);
         var createdService = await _serviceRepository.CreateAsync(service);
-        return MapToResponseModel(createdService);
+        return Result<ServiceResponseModel>.Success(MapToResponseModel(createdService));
     }
 
-    public async Task<ServiceResponseModel?> GetServiceByIdAsync(string id)
+    public async Task<Result<ServiceResponseModel>> GetServiceByIdAsync(string id)
     {
         var service = await _serviceRepository.GetByIdAsync(id);
-        return service != null ? MapToResponseModel(service) : null;
+        return service != null 
+            ? Result<ServiceResponseModel>.Success(MapToResponseModel(service))
+            : Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
     }
 
-    public async Task<IEnumerable<ServiceResponseModel>> GetAllServicesAsync()
+    public async Task<Result<IEnumerable<ServiceResponseModel>>> GetAllServicesAsync()
     {
         var services = await _serviceRepository.GetAllAsync();
-        return services.Select(MapToResponseModel);
+        var responseModels = services.Select(MapToResponseModel);
+        return Result<IEnumerable<ServiceResponseModel>>.Success(responseModels);
     }
 
-    public async Task<ServiceResponseModel> UpdateServiceAsync(string id, CreateServiceModel updateServiceModel)
+    public async Task<Result<ServiceResponseModel>> UpdateServiceAsync(string id, CreateServiceModel request)
     {
-        var validationResult = await _validator.ValidateAsync(updateServiceModel);
-        if (!validationResult.IsValid)
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
         {
-            _hasError = true;
-            _errors = validationResult.Errors
-                .ToDictionary(e => e.PropertyName, e => new[] { e.ErrorMessage });
-            return default;
+            var validationErrors = validation.Errors
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return Result<ServiceResponseModel>.Failure(validationErrors);
         }
+
         var existingService = await _serviceRepository.GetByIdAsync(id);
         if (existingService == null)
-            throw new ArgumentException("Service not found", nameof(id));
+            return Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
 
-        existingService.UpdateName(updateServiceModel.Name);
+        var updateResult = existingService.TryUpdateName(request.Name);
+        if (!updateResult.IsSuccess)
+            return Result<ServiceResponseModel>.Failure(updateResult.Errors.First());
+
         var updatedService = await _serviceRepository.UpdateAsync(existingService);
-        return MapToResponseModel(updatedService);
+        return Result<ServiceResponseModel>.Success(MapToResponseModel(updatedService));
     }
 
-    public async Task<bool> DeleteServiceAsync(string id)
+    public async Task<Result<bool>> DeleteServiceAsync(string id)
     {
-        return await _serviceRepository.DeleteAsync(id);
+        var deleted = await _serviceRepository.DeleteAsync(id);
+        return deleted 
+            ? Result<bool>.Success(true)
+            : Result<bool>.NotFound($"Serviço com ID {id} não encontrado");
     }
 
     private static ServiceResponseModel MapToResponseModel(Service service)

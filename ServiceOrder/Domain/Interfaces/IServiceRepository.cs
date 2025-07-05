@@ -1,6 +1,6 @@
 using ServiceOrder.Domain.Entities;
 
-namespace ServiceOrder.Application.Interfaces;
+namespace ServiceOrder.Domain.Interfaces;
 
 public interface IServiceRepository
 {
@@ -9,4 +9,4 @@ public interface IServiceRepository
     Task<IEnumerable<Service>> GetAllAsync();
     Task<Service> UpdateAsync(Service service);
     Task<bool> DeleteAsync(string id);
-} 
+}

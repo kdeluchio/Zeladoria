@@ -1,5 +1,5 @@
-using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Models;
+using ServiceOrder.Domain.Interfaces;
 
 namespace ServiceOrder.Presentation;
 
@@ -9,50 +9,44 @@ public static class ServiceEndpoints
     {
         routes.MapGet("/service", async (IServiceService serviceService) =>
         {
-            var services = await serviceService.GetAllServicesAsync();
-            return Results.Ok(services);
+            var result = await serviceService.GetAllServicesAsync();
+            return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(new { errors = result.Errors });
         });
 
         routes.MapGet("/service/{id}", async (string id, IServiceService serviceService) =>
         {
-            var service = await serviceService.GetServiceByIdAsync(id);
-            return service != null ? Results.Ok(service) : Results.NotFound();
+            var result = await serviceService.GetServiceByIdAsync(id);
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : Results.NotFound(new { error = result.Errors.First() });
         });
 
         routes.MapPost("/service", async (CreateServiceModel service, IServiceService serviceService) =>
         {
-            try
-            {
-                var createdService = await serviceService.CreateServiceAsync(service);
-                return Results.Created($"/service/{createdService.Id}", createdService);
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
+            var result = await serviceService.CreateServiceAsync(service);
+
+            if (!result.IsSuccess)
+                return Results.BadRequest(result.Errors);
+
+            return Results.Created($"/service/{result.Value.Id}", result.Value);
         });
 
         routes.MapPut("/service/{id}", async (string id, CreateServiceModel service, IServiceService serviceService) =>
         {
-            try
-            {
-                var updatedService = await serviceService.UpdateServiceAsync(id, service);
-                return Results.Ok(updatedService);
-            }
-            catch (ArgumentException)
-            {
-                return Results.NotFound();
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
+            var result = await serviceService.UpdateServiceAsync(id, service);
+
+            if (!result.IsSuccess)
+                return Results.BadRequest(result.Errors);
+
+            return Results.Ok(result.Value);
         });
 
         routes.MapDelete("/service/{id}", async (string id, IServiceService serviceService) =>
         {
-            var deleted = await serviceService.DeleteServiceAsync(id);
-            return deleted ? Results.NoContent() : Results.NotFound();
+            var result = await serviceService.DeleteServiceAsync(id);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.NotFound(new { error = result.Errors.First() });
         });
     }
-} 
+}

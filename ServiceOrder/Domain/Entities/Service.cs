@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using ServiceOrder.Domain.Models;
 
 namespace ServiceOrder.Domain.Entities;
 
@@ -19,12 +20,12 @@ public class Service
         Name = name;
     }
 
-    public void UpdateName(string name)
+    public Result TryUpdateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException("Service name cannot be empty", nameof(name));
+            return Result.Failure("Nome do serviço não pode estar vazio");
         
         Name = name;
+        return Result.Success();
     }
-
 }

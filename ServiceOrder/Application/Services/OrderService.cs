@@ -1,8 +1,8 @@
 using FluentValidation;
-using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
-using System.ComponentModel.DataAnnotations;
+using ServiceOrder.Domain.Interfaces;
+using ServiceOrder.Domain.Models;
 
 namespace ServiceOrder.Application.Services;
 
@@ -10,77 +10,82 @@ public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IValidator<CreateOrderModel> _validator;
-    private bool _hasError;
-    private Dictionary<string, string[]> _errors;
-
-    public bool HasError { get => _hasError; }
-    public Dictionary<string, string[]> Errors { get => _errors; }
 
     public OrderService(IOrderRepository orderRepository, IValidator<CreateOrderModel> validator)
     {
         _orderRepository = orderRepository;
         _validator = validator;
-        _errors = new Dictionary<string, string[]>();
     }
 
-    public async Task<OrderResponseModel> CreateOrderAsync(CreateOrderModel createOrderModel)
+    public async Task<Result<OrderResponseModel>> CreateOrderAsync(CreateOrderModel request)
     {
-        var validationResult = await _validator.ValidateAsync(createOrderModel);
-        if (!validationResult.IsValid)
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
         {
-            _hasError = true;
-            _errors = validationResult.Errors
-                .ToDictionary(e => e.PropertyName, e => new[] { e.ErrorMessage });
-            return default;
+            var validationErrors = validation.Errors
+                .Select(e => e.ErrorMessage )
+                .ToList();
+            return Result<OrderResponseModel>.Failure(validationErrors);
         }
+
         var order = new Order(
-            createOrderModel.CustomerId,
-            createOrderModel.Description,
-            createOrderModel.Address,
-            createOrderModel.NumberAddress,
-            createOrderModel.Latitude,
-            createOrderModel.Longitude
+            request.CustomerId,
+            request.ServiceId,
+            request.Description,
+            request.Address,
+            request.NumberAddress,
+            request.Latitude,
+            request.Longitude
         );
 
         var createdOrder = await _orderRepository.CreateAsync(order);
-
-        return MapToResponseModel(createdOrder);
+        return Result<OrderResponseModel>.Success(MapToResponseModel(createdOrder));
     }
 
-    public async Task<OrderResponseModel?> GetOrderByIdAsync(string id)
+    public async Task<Result<OrderResponseModel>> GetOrderByIdAsync(string id)
     {
         var order = await _orderRepository.GetByIdAsync(id);
-        return order != null ? MapToResponseModel(order) : null;
+        return order != null 
+            ? Result<OrderResponseModel>.Success(MapToResponseModel(order))
+            : Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
     }
 
-    public async Task<IEnumerable<OrderResponseModel>> GetAllOrdersAsync()
+    public async Task<Result<IEnumerable<OrderResponseModel>>> GetAllOrdersAsync()
     {
         var orders = await _orderRepository.GetAllAsync();
-        return orders.Select(MapToResponseModel);
+        var responseModels = orders.Select(MapToResponseModel);
+        return Result<IEnumerable<OrderResponseModel>>.Success(responseModels);
     }
 
-    public async Task<OrderResponseModel> UpdateOrderAsync(string id, CreateOrderModel updateOrderModel)
+    public async Task<Result<OrderResponseModel>> UpdateOrderAsync(string id, CreateOrderModel request)
     {
-        var existingOrder = await _orderRepository.GetByIdAsync(id);
-        if (existingOrder == null)
-            throw new ArgumentException("Order not found", nameof(id));
+        var validation = await _validator.ValidateAsync(request);
+        if (!validation.IsValid)
+        {
+            var validationErrors = validation.Errors
+                .Select(e => e.ErrorMessage)
+                .ToList();
+            return Result<OrderResponseModel>.Failure(validationErrors);
+        }
 
-        var updatedOrder = new Order(
-            updateOrderModel.CustomerId,
-            updateOrderModel.Description,
-            updateOrderModel.Address,
-            updateOrderModel.NumberAddress,
-            updateOrderModel.Latitude,
-            updateOrderModel.Longitude
-        );
+        var order = await _orderRepository.GetByIdAsync(id);
+        if (order == null)
+            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
 
-        var orderToUpdate = await _orderRepository.UpdateAsync(updatedOrder);
-        return MapToResponseModel(orderToUpdate);
+        var updateResult = order.TryUpdate(request.Description, request.Address, request.NumberAddress, request.Latitude, request.Longitude);
+        if (!updateResult.IsSuccess)
+            return Result<OrderResponseModel>.Failure(updateResult.Errors.First());
+
+        var orderToUpdate = await _orderRepository.UpdateAsync(order);
+        return Result<OrderResponseModel>.Success(MapToResponseModel(orderToUpdate));
     }
 
-    public async Task<bool> DeleteOrderAsync(string id)
+    public async Task<Result<bool>> DeleteOrderAsync(string id)
     {
-        return await _orderRepository.DeleteAsync(id);
+        var deleted = await _orderRepository.DeleteAsync(id);
+        return deleted 
+            ? Result<bool>.Success(true)
+            : Result<bool>.NotFound($"Pedido com ID {id} não encontrado");
     }
 
     private static OrderResponseModel MapToResponseModel(Order order)
@@ -96,29 +101,8 @@ public class OrderService : IOrderService
             Latitude = order.Latitude,
             Longitude = order.Longitude,
             CustomerId = order.CustomerId,
-            Customer = order.Customer != null ? new CustomerResponseModel
-            {
-                Id = order.Customer.Id,
-                Name = order.Customer.Name,
-                CPF = order.Customer.CPF,
-                Email = order.Customer.Email,
-                Phone = order.Customer.Phone
-            } : null,
             ServiceId = order.ServiceId,
-            Service = order.Service != null ? new ServiceResponseModel
-            {
-                Id = order.Service.Id,
-                Name = order.Service.Name
-            } : null,
             TechnicianId = order.TechnicianId,
-            Technician = order.Technician != null ? new TechnicianResponseModel
-            {
-                Id = order.Technician.Id,
-                Name = order.Technician.Name,
-                CompanyCode = order.Technician.CompanyCode,
-                Email = order.Technician.Email,
-                Phone = order.Technician.Phone
-            } : null,
             Feedback = order.Feedback,
             UpdatedAt = order.UpdatedAt,
             CompletedAt = order.CompletedAt

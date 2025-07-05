@@ -1,6 +1,8 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Enums;
+using ServiceOrder.Domain.Models;
 
 namespace ServiceOrder.Domain.Entities;
 
@@ -16,25 +18,17 @@ public class Order
     public string NumberAddress { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
-    
     public int CustomerId { get; private set; }
-    public virtual Customer Customer { get; set; }
-    
     public int ServiceId { get; private set; }
-    public virtual Service Service { get; set; }
-    
     public int TechnicianId { get; private set; }
-    public virtual Technician? Technician { get; set; }
-    
     public string Feedback { get; private set; }
-   
     public DateTime? UpdatedAt { get; private set; }
-    
     public DateTime? CompletedAt { get; private set; }
 
-    public Order(int customerId, string description, string address, string numberAddress, double latitude, double longitude)
+    public Order(int customerId, int serviceId, string description, string address, string numberAddress, double latitude, double longitude)
     {
         Id = ObjectId.GenerateNewId().ToString();
+        ServiceId = serviceId;
         CustomerId = customerId;
         Description = description;
         Address = address;
@@ -65,5 +59,19 @@ public class Order
         Status = OrderStatus.Cancelled;
         CompletedAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public Result TryUpdate(string description, string address, string numberAddress, double latitude, double longitude)
+    {
+        if (Status != OrderStatus.Pending)
+            return Result.Failure("Só é possível editar pedidos com status Pendente");
+
+        Description = description;
+        Address = address;
+        NumberAddress = numberAddress;
+        Latitude = latitude;
+        Longitude = longitude;
+        
+        return Result.Success();
     }
 }

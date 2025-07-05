@@ -1,5 +1,5 @@
-﻿using ServiceOrder.Application.Interfaces;
-using ServiceOrder.Application.Models;
+﻿using ServiceOrder.Application.Models;
+using ServiceOrder.Domain.Interfaces;
 
 namespace ServiceOrder.Presentation;
 
@@ -9,58 +9,43 @@ public static class OrderEndpoints
     {
         routes.MapGet("/order", async (IOrderService orderService) =>
         {
-            var orders = await orderService.GetAllOrdersAsync();
-            return Results.Ok(orders);
+            var result = await orderService.GetAllOrdersAsync();
+            return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(new { errors = result.Errors });
         });
 
         routes.MapGet("/order/{id}", async (string id, IOrderService orderService) =>
         {
-            var order = await orderService.GetOrderByIdAsync(id);
-            return order != null ? Results.Ok(order) : Results.NotFound();
+            var result = await orderService.GetOrderByIdAsync(id);
+            return result.IsSuccess
+                ? Results.Ok(result.Value)
+                : Results.NotFound(new { error = result.Errors.First() });
         });
 
         routes.MapPost("/order", async (CreateOrderModel order, IOrderService orderService) =>
         {
-            try
-            {
-                var createdOrder = await orderService.CreateOrderAsync(order);
-                if (orderService.HasError)
-                {
-                    return Results.ValidationProblem(orderService.Errors);
-                }
-                return Results.Created($"/order/{createdOrder.Id}", createdOrder);
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
+            var result = await orderService.CreateOrderAsync(order);
+
+            if (!result.IsSuccess)
+                return Results.BadRequest(result.Errors);
+
+            return Results.Created($"/order/{result.Value.Id}", result.Value);
         });
 
         routes.MapPut("/order/{id}", async (string id, CreateOrderModel order, IOrderService orderService) =>
         {
-            try
-            {
-                var updatedOrder = await orderService.UpdateOrderAsync(id, order);
-                if (orderService.HasError)
-                {
-                    return Results.ValidationProblem(orderService.Errors);
-                }
-                return Results.Ok(updatedOrder);
-            }
-            catch (ArgumentException)
-            {
-                return Results.NotFound();
-            }
-            catch (Exception ex)
-            {
-                return Results.BadRequest(new { error = ex.Message });
-            }
+            var result = await orderService.UpdateOrderAsync(id, order);
+            if (!result.IsSuccess)
+                return Results.BadRequest(result.Errors);
+
+            return Results.Ok(result.Value);
         });
 
         routes.MapDelete("/order/{id}", async (string id, IOrderService orderService) =>
         {
-            var deleted = await orderService.DeleteOrderAsync(id);
-            return deleted ? Results.NoContent() : Results.NotFound();
+            var result = await orderService.DeleteOrderAsync(id);
+            return result.IsSuccess
+                ? Results.NoContent()
+                : Results.NotFound(new { error = result.Errors.First() });
         });
     }
 }

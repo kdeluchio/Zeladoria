@@ -1,11 +1,11 @@
 using MongoDB.Driver;
-using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Application.Services;
 using ServiceOrder.Application.Validators;
 using ServiceOrder.Infra.Data;
 using ServiceOrder.Infra.Data.Repositories;
 using FluentValidation;
 using FluentValidation.AspNetCore;
+using ServiceOrder.Domain.Interfaces;
 
 namespace ServiceOrder.Infra.Extensions;
 

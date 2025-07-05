@@ -1,6 +1,6 @@
 using MongoDB.Driver;
-using ServiceOrder.Application.Interfaces;
 using ServiceOrder.Domain.Entities;
+using ServiceOrder.Domain.Interfaces;
 
 namespace ServiceOrder.Infra.Data.Repositories;
 
