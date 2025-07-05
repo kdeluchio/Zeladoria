@@ -27,6 +27,8 @@ public static class ServiceCollectionExtensions
     {
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IOrderService, OrderService>();
+        services.AddScoped<IServiceRepository, ServiceRepository>();
+        services.AddScoped<IServiceService, ServiceService>();
         
         return services;
     }

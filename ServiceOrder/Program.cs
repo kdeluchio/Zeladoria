@@ -19,5 +19,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapOrderEndpoints();
+app.MapServiceEndpoints();
 
 app.Run();

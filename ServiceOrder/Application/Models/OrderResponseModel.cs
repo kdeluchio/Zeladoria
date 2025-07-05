@@ -26,27 +26,3 @@ public class OrderResponseModel
     public DateTime? UpdatedAt { get; set; }
     public DateTime? CompletedAt { get; set; }
 }
-
-public class CustomerResponseModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string CPF { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
-}
-
-public class ServiceResponseModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-}
-
-public class TechnicianResponseModel
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public string CompanyCode { get; set; } = string.Empty;
-    public string Email { get; set; } = string.Empty;
-    public string Phone { get; set; } = string.Empty;
-} 
