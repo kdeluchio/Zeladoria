@@ -10,7 +10,7 @@ services:
       - "27017:27017"
     networks:
       - zeladoria-net
-
+      
   serviceorderapi:
     build:
       context: ./ServiceOrder
@@ -24,6 +24,19 @@ services:
     networks:
       - zeladoria-net
 
+  serviceauthapi:
+    build:
+      context: ./ServiceAuth
+    container_name: serviceauthapi
+    ports:
+      - "5021:5021"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - mongodb
+    networks:
+      - zeladoria-net
+      
 networks:
   zeladoria-net:
     driver: bridge 
