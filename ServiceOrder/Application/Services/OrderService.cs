@@ -11,12 +11,16 @@ namespace ServiceOrder.Application.Services;
 public class OrderService : IOrderService
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly IServiceRepository _serviceRepository;
     private readonly IValidator<CreateOrderModel> _validator;
 
-    public OrderService(IOrderRepository orderRepository, IValidator<CreateOrderModel> validator)
+    public OrderService(IOrderRepository orderRepository, 
+                        IValidator<CreateOrderModel> validator,
+                        IServiceRepository serviceRepository)
     {
         _orderRepository = orderRepository;
         _validator = validator;
+        _serviceRepository = serviceRepository;
     }
 
     public async Task<Result<OrderResponseModel>> CreateOrderAsync(CreateOrderModel request)
@@ -30,9 +34,15 @@ public class OrderService : IOrderService
             return Result<OrderResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
+        var service = await _serviceRepository.GetByIdAsync(request.ServiceId);
+        if (service == null)
+        {
+            return Result<OrderResponseModel>.Failure("Servico nao cadastrado", ErrorType.Validation);
+        }
+
         var order = new Order(
             request.CustomerId,
-            request.ServiceId,
+            service,
             request.Description,
             request.Address,
             request.NumberAddress,
@@ -46,9 +56,6 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderResponseModel>> GetOrderByIdAsync(string id)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
-
         var order = await _orderRepository.GetByIdAsync(id);
         return order != null
             ? Result<OrderResponseModel>.Success(MapToResponseModel(order))
@@ -64,9 +71,6 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderResponseModel>> UpdateOrderAsync(string id, CreateOrderModel request)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
-
         var validation = await _validator.ValidateAsync(request);
         if (!validation.IsValid)
         {
@@ -74,6 +78,12 @@ public class OrderService : IOrderService
                 .Select(e => e.ErrorMessage)
                 .ToList();
             return Result<OrderResponseModel>.Failure(validationErrors, ErrorType.Validation);
+        }
+
+        var service = await _serviceRepository.GetByIdAsync(request.ServiceId);
+        if (service == null)
+        {
+            return Result<OrderResponseModel>.Failure("Servico nao cadastrado", ErrorType.Validation);
         }
 
         var order = await _orderRepository.GetByIdAsync(id);
@@ -90,9 +100,6 @@ public class OrderService : IOrderService
 
     public async Task<Result<bool>> DeleteOrderAsync(string id)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<bool>.NotFound($"Pedido com ID {id} não encontrado");
-
         var deleted = await _orderRepository.DeleteAsync(id);
         return deleted
             ? Result<bool>.Success(true)
@@ -112,7 +119,11 @@ public class OrderService : IOrderService
             Latitude = order.Latitude,
             Longitude = order.Longitude,
             CustomerId = order.CustomerId,
-            ServiceId = order.ServiceId,
+            Service = new ServiceResponseModel
+            {
+                Id = order.Service.Id,
+                Name = order.Service.Name
+            },
             TechnicianId = order.TechnicianId,
             Feedback = order.Feedback,
             UpdatedAt = order.UpdatedAt,

@@ -18,17 +18,17 @@ public class Order
     public string NumberAddress { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
-    public int CustomerId { get; private set; }
-    public int ServiceId { get; private set; }
-    public int TechnicianId { get; private set; }
+    public string CustomerId { get; private set; }
+    public Service Service { get; private set; }
+    public string TechnicianId { get; private set; }
     public string Feedback { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
 
-    public Order(int customerId, int serviceId, string description, string address, string numberAddress, double latitude, double longitude)
+    public Order(string customerId, Service service, string description, string address, string numberAddress, double latitude, double longitude)
     {
         Id = ObjectId.GenerateNewId().ToString();
-        ServiceId = serviceId;
+        Service = service;
         CustomerId = customerId;
         Description = description;
         Address = address;
@@ -39,7 +39,7 @@ public class Order
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void SetInProgress(int technicianId)
+    public void SetInProgress(string technicianId)
     {
         TechnicianId = technicianId;
         Status = OrderStatus.InProgress;

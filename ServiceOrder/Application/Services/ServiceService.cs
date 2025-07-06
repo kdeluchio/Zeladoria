@@ -37,9 +37,6 @@ public class ServiceService : IServiceService
 
     public async Task<Result<ServiceResponseModel>> GetServiceByIdAsync(string id)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
-
         var service = await _serviceRepository.GetByIdAsync(id);
         return service != null 
             ? Result<ServiceResponseModel>.Success(MapToResponseModel(service))
@@ -55,9 +52,6 @@ public class ServiceService : IServiceService
 
     public async Task<Result<ServiceResponseModel>> UpdateServiceAsync(string id, CreateServiceModel request)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
-
         var validation = await _validator.ValidateAsync(request);
         if (!validation.IsValid)
         {
@@ -81,9 +75,6 @@ public class ServiceService : IServiceService
 
     public async Task<Result<bool>> DeleteServiceAsync(string id)
     {
-        if (!ObjectId.TryParse(id, out ObjectId objectId))
-            return Result<bool>.NotFound($"Serviço com ID {id} não encontrado");
-
         var deleted = await _serviceRepository.DeleteAsync(id);
         return deleted 
             ? Result<bool>.Success(true)

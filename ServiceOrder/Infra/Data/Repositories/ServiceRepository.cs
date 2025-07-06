@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using ServiceOrder.Domain.Entities;
 using ServiceOrder.Domain.Interfaces;
@@ -21,6 +22,9 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<Service?> GetByIdAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return default;
+
         return await _services.Find(x => x.Id == id).FirstOrDefaultAsync();
     }
 
@@ -38,7 +42,10 @@ public class ServiceRepository : IServiceRepository
 
     public async Task<bool> DeleteAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return default;
+
         var result = await _services.DeleteOneAsync(x => x.Id == id);
         return result.DeletedCount > 0;
     }
-} 
+}

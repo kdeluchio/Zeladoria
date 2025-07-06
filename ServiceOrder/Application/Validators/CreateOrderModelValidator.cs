@@ -8,12 +8,12 @@ public class CreateOrderModelValidator : AbstractValidator<CreateOrderModel>
     public CreateOrderModelValidator()
     {
         RuleFor(x => x.CustomerId)
-            .GreaterThan(0)
-            .WithMessage("CustomerId deve ser maior que zero");
+            .NotEmpty()
+            .WithMessage("Informe o CustomerId");
 
         RuleFor(x => x.ServiceId)
-            .GreaterThan(0)
-            .WithMessage("ServiceId deve ser maior que zero");
+            .NotEmpty()
+            .WithMessage("Informe o ServiceId");
 
         RuleFor(x => x.Description)
             .NotEmpty()

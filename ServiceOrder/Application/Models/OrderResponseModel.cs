@@ -13,13 +13,12 @@ public class OrderResponseModel
     public double Latitude { get; set; }
     public double Longitude { get; set; }
     
-    public int CustomerId { get; set; }
+    public string CustomerId { get; set; }
     public CustomerResponseModel? Customer { get; set; }
     
-    public int ServiceId { get; set; }
     public ServiceResponseModel? Service { get; set; }
     
-    public int TechnicianId { get; set; }
+    public string TechnicianId { get; set; }
     public TechnicianResponseModel? Technician { get; set; }
     
     public string Feedback { get; set; } = string.Empty;
