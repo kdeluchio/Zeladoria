@@ -1,6 +1,8 @@
 using FluentValidation;
+using MongoDB.Bson;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
+using ServiceOrder.Domain.Enums;
 using ServiceOrder.Domain.Interfaces;
 using ServiceOrder.Domain.Models;
 
@@ -25,7 +27,7 @@ public class ServiceService : IServiceService
             var validationErrors = validation.Errors
                 .Select(e => e.ErrorMessage)
                 .ToList();
-            return Result<ServiceResponseModel>.Failure(validationErrors);
+            return Result<ServiceResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
         var service = new Service(request.Name);
@@ -35,6 +37,9 @@ public class ServiceService : IServiceService
 
     public async Task<Result<ServiceResponseModel>> GetServiceByIdAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
+
         var service = await _serviceRepository.GetByIdAsync(id);
         return service != null 
             ? Result<ServiceResponseModel>.Success(MapToResponseModel(service))
@@ -50,13 +55,16 @@ public class ServiceService : IServiceService
 
     public async Task<Result<ServiceResponseModel>> UpdateServiceAsync(string id, CreateServiceModel request)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<ServiceResponseModel>.NotFound($"Serviço com ID {id} não encontrado");
+
         var validation = await _validator.ValidateAsync(request);
         if (!validation.IsValid)
         {
             var validationErrors = validation.Errors
                 .Select(e => e.ErrorMessage)
                 .ToList();
-            return Result<ServiceResponseModel>.Failure(validationErrors);
+            return Result<ServiceResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
         var existingService = await _serviceRepository.GetByIdAsync(id);
@@ -65,7 +73,7 @@ public class ServiceService : IServiceService
 
         var updateResult = existingService.TryUpdateName(request.Name);
         if (!updateResult.IsSuccess)
-            return Result<ServiceResponseModel>.Failure(updateResult.Errors.First());
+            return Result<ServiceResponseModel>.Failure(updateResult.Errors.First(), ErrorType.Validation);
 
         var updatedService = await _serviceRepository.UpdateAsync(existingService);
         return Result<ServiceResponseModel>.Success(MapToResponseModel(updatedService));
@@ -73,6 +81,9 @@ public class ServiceService : IServiceService
 
     public async Task<Result<bool>> DeleteServiceAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<bool>.NotFound($"Serviço com ID {id} não encontrado");
+
         var deleted = await _serviceRepository.DeleteAsync(id);
         return deleted 
             ? Result<bool>.Success(true)

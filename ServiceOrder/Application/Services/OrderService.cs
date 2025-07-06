@@ -1,6 +1,8 @@
 using FluentValidation;
+using MongoDB.Bson;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
+using ServiceOrder.Domain.Enums;
 using ServiceOrder.Domain.Interfaces;
 using ServiceOrder.Domain.Models;
 
@@ -23,9 +25,9 @@ public class OrderService : IOrderService
         if (!validation.IsValid)
         {
             var validationErrors = validation.Errors
-                .Select(e => e.ErrorMessage )
+                .Select(e => e.ErrorMessage)
                 .ToList();
-            return Result<OrderResponseModel>.Failure(validationErrors);
+            return Result<OrderResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
         var order = new Order(
@@ -44,8 +46,11 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderResponseModel>> GetOrderByIdAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
+
         var order = await _orderRepository.GetByIdAsync(id);
-        return order != null 
+        return order != null
             ? Result<OrderResponseModel>.Success(MapToResponseModel(order))
             : Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
     }
@@ -59,13 +64,16 @@ public class OrderService : IOrderService
 
     public async Task<Result<OrderResponseModel>> UpdateOrderAsync(string id, CreateOrderModel request)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
+
         var validation = await _validator.ValidateAsync(request);
         if (!validation.IsValid)
         {
             var validationErrors = validation.Errors
                 .Select(e => e.ErrorMessage)
                 .ToList();
-            return Result<OrderResponseModel>.Failure(validationErrors);
+            return Result<OrderResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
         var order = await _orderRepository.GetByIdAsync(id);
@@ -74,7 +82,7 @@ public class OrderService : IOrderService
 
         var updateResult = order.TryUpdate(request.Description, request.Address, request.NumberAddress, request.Latitude, request.Longitude);
         if (!updateResult.IsSuccess)
-            return Result<OrderResponseModel>.Failure(updateResult.Errors.First());
+            return Result<OrderResponseModel>.Failure(updateResult.Errors.First(), ErrorType.Validation);
 
         var orderToUpdate = await _orderRepository.UpdateAsync(order);
         return Result<OrderResponseModel>.Success(MapToResponseModel(orderToUpdate));
@@ -82,8 +90,11 @@ public class OrderService : IOrderService
 
     public async Task<Result<bool>> DeleteOrderAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return Result<bool>.NotFound($"Pedido com ID {id} não encontrado");
+
         var deleted = await _orderRepository.DeleteAsync(id);
-        return deleted 
+        return deleted
             ? Result<bool>.Success(true)
             : Result<bool>.NotFound($"Pedido com ID {id} não encontrado");
     }
