@@ -1,0 +1,29 @@
+version: '3.8'
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    ports:
+      - "27017:27017"
+    networks:
+      - zeladoria-net
+
+  serviceorderapi:
+    build:
+      context: ./ServiceOrder
+    container_name: serviceorderapi
+    ports:
+      - "5011:5011"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+    depends_on:
+      - mongodb
+    networks:
+      - zeladoria-net
+
+networks:
+  zeladoria-net:
+    driver: bridge 
