@@ -7,10 +7,6 @@ public class CreateOrderModelValidator : AbstractValidator<CreateOrderModel>
 {
     public CreateOrderModelValidator()
     {
-        RuleFor(x => x.CustomerId)
-            .NotEmpty()
-            .WithMessage("Informe o CustomerId");
-
         RuleFor(x => x.ServiceId)
             .NotEmpty()
             .WithMessage("Informe o ServiceId");

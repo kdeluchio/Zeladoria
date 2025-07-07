@@ -1,5 +1,4 @@
 using FluentValidation;
-using MongoDB.Bson;
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Entities;
 using ServiceOrder.Domain.Enums;
@@ -13,14 +12,17 @@ public class OrderService : IOrderService
     private readonly IOrderRepository _orderRepository;
     private readonly IServiceRepository _serviceRepository;
     private readonly IValidator<CreateOrderModel> _validator;
+    private readonly IUserContextService _userContextService;
 
-    public OrderService(IOrderRepository orderRepository, 
+    public OrderService(IOrderRepository orderRepository,
                         IValidator<CreateOrderModel> validator,
-                        IServiceRepository serviceRepository)
+                        IServiceRepository serviceRepository,
+                        IUserContextService userContextService)
     {
         _orderRepository = orderRepository;
         _validator = validator;
         _serviceRepository = serviceRepository;
+        _userContextService = userContextService;
     }
 
     public async Task<Result<OrderResponseModel>> CreateOrderAsync(CreateOrderModel request)
@@ -40,8 +42,16 @@ public class OrderService : IOrderService
             return Result<OrderResponseModel>.Failure("Servico nao cadastrado", ErrorType.Validation);
         }
 
+        var user = _userContextService.GetCurrentUser();
+        var customer = new Customer
+        {
+            Id = user.UserId,
+            Email = user.UserEmail,
+            Name = user.UserName
+        };
+
         var order = new Order(
-            request.CustomerId,
+            customer,
             service,
             request.Description,
             request.Address,
@@ -118,13 +128,25 @@ public class OrderService : IOrderService
             NumberAddress = order.NumberAddress,
             Latitude = order.Latitude,
             Longitude = order.Longitude,
-            CustomerId = order.CustomerId,
+            Customer = new CustomerResponseModel
+            {
+                Id = order.Customer.Id,
+                Email = order.Customer.Email,
+                Name = order.Customer.Name,
+            },
             Service = new ServiceResponseModel
             {
                 Id = order.Service.Id,
                 Name = order.Service.Name
             },
-            TechnicianId = order.TechnicianId,
+            Technician = new TechnicianResponseModel
+            {
+                Id = order.Technician?.Id,
+                Email = order.Technician?.Email,
+                Name = order.Technician?.Name,
+                Phone = order.Technician?.Phone,
+                CompanyCode = order.Technician?.CompanyCode
+            },
             Feedback = order.Feedback,
             UpdatedAt = order.UpdatedAt,
             CompletedAt = order.CompletedAt

@@ -1,6 +1,5 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
-using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Enums;
 using ServiceOrder.Domain.Models;
 
@@ -18,18 +17,24 @@ public class Order
     public string NumberAddress { get; private set; }
     public double Latitude { get; private set; }
     public double Longitude { get; private set; }
-    public string CustomerId { get; private set; }
+    public Customer Customer { get; private set; }
     public Service Service { get; private set; }
-    public string TechnicianId { get; private set; }
+    public Technician Technician { get; private set; }
     public string Feedback { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
+    
+    // Propriedades para rastrear o usuário que criou e atualizou
+    public string? CreatedBy { get; set; }
+    public string? CreatedByEmail { get; set; }
+    public string? UpdatedBy { get; set; }
+    public string? UpdatedByEmail { get; set; }
 
-    public Order(string customerId, Service service, string description, string address, string numberAddress, double latitude, double longitude)
+    public Order(Customer customer, Service service, string description, string address, string numberAddress, double latitude, double longitude)
     {
         Id = ObjectId.GenerateNewId().ToString();
         Service = service;
-        CustomerId = customerId;
+        Customer = customer;
         Description = description;
         Address = address;
         NumberAddress = numberAddress;
@@ -39,9 +44,9 @@ public class Order
         CreatedAt = DateTime.UtcNow;
     }
 
-    public void SetInProgress(string technicianId)
+    public void SetInProgress(Technician technician)
     {
-        TechnicianId = technicianId;
+        Technician = technician;
         Status = OrderStatus.InProgress;
         UpdatedAt = DateTime.UtcNow;
     }
