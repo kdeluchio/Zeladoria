@@ -97,7 +97,9 @@ public class AuthService : IAuthService
             PasswordHash = passwordHash,
             Role = "User",
             CreatedAt = DateTime.UtcNow,
-            IsActive = true
+            IsActive = true,
+            CPF = signupModel.CPF,
+            Phone = signupModel.Phone,
         };
 
         var createdUser = await _userRepository.CreateAsync(user);
@@ -172,10 +174,10 @@ public class AuthService : IAuthService
     public async Task<Result<string>> GenerateJwtTokenAsync(UserResponseModel user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"] ?? "your-super-secret-key-with-at-least-32-characters";
-        var issuer = jwtSettings["Issuer"] ?? "ServiceAuth";
-        var audience = jwtSettings["Audience"] ?? "ServiceAuth";
-        var expirationHours = int.Parse(jwtSettings["ExpirationHours"] ?? "24");
+        var secretKey = jwtSettings["SecretKey"];
+        var issuer = jwtSettings["Issuer"] ;
+        var audience = jwtSettings["Audience"] ;
+        var expirationHours = int.Parse(jwtSettings["ExpirationHours"] );
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -231,7 +233,9 @@ public class AuthService : IAuthService
             Role = user.Role,
             CreatedAt = user.CreatedAt,
             UpdatedAt = user.UpdatedAt,
-            IsActive = user.IsActive
+            IsActive = user.IsActive,
+            CPF = user.CPF,
+            Phone = user.Phone
         };
     }
 } 

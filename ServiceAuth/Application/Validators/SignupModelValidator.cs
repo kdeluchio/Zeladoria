@@ -16,6 +16,9 @@ public class SignupModelValidator : AbstractValidator<SignupModel>
             .NotEmpty().WithMessage("Email é obrigatório")
             .EmailAddress().WithMessage("Email deve ter um formato válido");
 
+        RuleFor(x => x.CPF)
+            .NotEmpty().WithMessage("CPF é obrigatório");
+
         RuleFor(x => x.Password)
             .NotEmpty().WithMessage("Senha é obrigatória")
             .MinimumLength(6).WithMessage("Senha deve ter pelo menos 6 caracteres")
