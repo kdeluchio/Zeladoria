@@ -4,6 +4,7 @@ using ServiceAuth.Presentation;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMongoDb(builder.Configuration);
+builder.Services.AddRabbitMQ(builder.Configuration);
 builder.Services.AddApplicationServices();
 
 builder.Services.AddEndpointsApiExplorer();

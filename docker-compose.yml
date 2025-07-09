@@ -32,7 +32,7 @@ services:
       - RabbitMQ__HostName=rabbitmq
       - RabbitMQ__UserName=guest
       - RabbitMQ__Password=guest
-      - RabbitMQ__QueueName=reset-password
+      - RabbitMQ__QueueName=forgot-password
     depends_on:
       - rabbitmq
     networks:
@@ -61,6 +61,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - mongodb
+      - rabbitmq
     networks:
       - zeladoria-net
       
