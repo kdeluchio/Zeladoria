@@ -11,6 +11,33 @@ services:
     networks:
       - zeladoria-net
       
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - zeladoria-net
+      
+  servicenotification:
+    build:
+      context: ./ServiceNotification
+    container_name: servicenotification
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - RabbitMQ__HostName=rabbitmq
+      - RabbitMQ__UserName=guest
+      - RabbitMQ__Password=guest
+      - RabbitMQ__QueueName=reset-password
+    depends_on:
+      - rabbitmq
+    networks:
+      - zeladoria-net
+      
   serviceorderapi:
     build:
       context: ./ServiceOrder
