@@ -10,5 +10,4 @@ public interface IAuthService
     Task<Result<string>> ForgotPasswordAsync(string email);
     Task<Result<bool>> ResetPasswordAsync(ResetPasswordModel resetPasswordModel);
     Task<Result<UserResponseModel>> GetUserByIdAsync(string id);
-    Task<Result<string>> GenerateJwtTokenAsync(UserResponseModel user);
 } 

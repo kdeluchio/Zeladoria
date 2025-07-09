@@ -22,7 +22,7 @@ O serviço utiliza as seguintes configurações no `appsettings.json`:
     "HostName": "localhost",
     "UserName": "guest",
     "Password": "guest",
-    "QueueName": "reset-password"
+    "QueueName": "forgot-password"
   }
 }
 ```
@@ -31,7 +31,7 @@ O serviço utiliza as seguintes configurações no `appsettings.json`:
 
 O `MessageProcessorService` processa os seguintes tipos de mensagens:
 
-### 1. Reset Password (`reset-password`)
+### 1. Reset Password (`forgot-password`)
 - Processa solicitações de reset de senha
 - Envia emails com links de reset
 
@@ -53,7 +53,7 @@ As mensagens devem ser enviadas em formato JSON:
 
 ```json
 {
-  "type": "reset-password",
+  "type": "forgot-password",
   "content": "Mensagem opcional",
   "data": {
     "userId": "123",

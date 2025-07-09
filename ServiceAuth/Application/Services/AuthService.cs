@@ -19,19 +19,22 @@ public class AuthService : IAuthService
     private readonly IValidator<SignupModel> _signupValidator;
     private readonly IValidator<ResetPasswordModel> _resetPasswordValidator;
     private readonly IConfiguration _configuration;
+    private readonly IQueueProducerService _producer;
 
     public AuthService(
         IUserRepository userRepository,
         IValidator<LoginModel> loginValidator,
         IValidator<SignupModel> signupValidator,
         IValidator<ResetPasswordModel> resetPasswordValidator,
-        IConfiguration configuration)
+        IConfiguration configuration,
+        IQueueProducerService producer)
     {
         _userRepository = userRepository;
         _loginValidator = loginValidator;
         _signupValidator = signupValidator;
         _resetPasswordValidator = resetPasswordValidator;
         _configuration = configuration;
+        _producer = producer;
     }
 
     public async Task<Result<LoginResponseModel>> LoginAsync(LoginModel loginModel)
@@ -116,7 +119,6 @@ public class AuthService : IAuthService
         var user = await _userRepository.GetByEmailAsync(email);
         if (user == null)
         {
-            // Por segurança, não informamos se o email existe ou não
             return Result<string>.Success("Se o email estiver cadastrado, você receberá um link para reset de senha");
         }
 
@@ -126,9 +128,9 @@ public class AuthService : IAuthService
 
         await _userRepository.UpdateAsync(user);
 
-        // Em um ambiente real, aqui seria enviado um email com o token
-        // Por simplicidade, retornamos o token diretamente
-        return Result<string>.Success($"Token de reset: {resetToken}");
+        await _producer.SendAsync(new QueueMessage(user.Email, resetToken));
+
+        return Result<string>.Success($"Email enviado com o token");
     }
 
     public async Task<Result<bool>> ResetPasswordAsync(ResetPasswordModel resetPasswordModel)
@@ -171,7 +173,7 @@ public class AuthService : IAuthService
             : Result<UserResponseModel>.NotFound($"Usuário com ID {id} não encontrado");
     }
 
-    public async Task<Result<string>> GenerateJwtTokenAsync(UserResponseModel user)
+    private async Task<Result<string>> GenerateJwtTokenAsync(UserResponseModel user)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
