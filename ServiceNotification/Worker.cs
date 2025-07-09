@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text;
@@ -10,7 +9,7 @@ public class Worker : BackgroundService
     private readonly ILogger<Worker> _logger;
     private readonly IConfiguration _configuration;
     private IConnection? _connection;
-    private IModel? _channel;
+    private IChannel? _channel;
 
     public Worker(ILogger<Worker> logger, IConfiguration configuration)
     {
@@ -18,7 +17,7 @@ public class Worker : BackgroundService
         _configuration = configuration;
     }
 
-    public override Task StartAsync(CancellationToken cancellationToken)
+    public async override Task StartAsync(CancellationToken cancellationToken)
     {
         var rabbitConfig = _configuration.GetSection("RabbitMQ");
         var factory = new ConnectionFactory()
@@ -27,33 +26,83 @@ public class Worker : BackgroundService
             UserName = rabbitConfig["UserName"],
             Password = rabbitConfig["Password"]
         };
-        _connection = factory.CreateConnection();
-        _channel = _connection.CreateModel();
-        _channel.QueueDeclare(queue: rabbitConfig["QueueName"], durable: true, exclusive: false, autoDelete: false, arguments: null);
-        return base.StartAsync(cancellationToken);
+        _connection = await factory.CreateConnectionAsync();
+        _channel = await _connection.CreateChannelAsync();
+        await _channel.QueueDeclareAsync(queue: rabbitConfig["QueueName"], durable: true, exclusive: false, autoDelete: false, arguments: null);
+        await base.StartAsync(cancellationToken);
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    protected async override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var rabbitConfig = _configuration.GetSection("RabbitMQ");
         var queueName = rabbitConfig["QueueName"];
-        var consumer = new EventingBasicConsumer(_channel);
-        consumer.Received += (model, ea) =>
+        var consumer = new AsyncEventingBasicConsumer(_channel);
+        
+        consumer.ReceivedAsync += async(model, ea) =>
         {
-            var body = ea.Body.ToArray();
-            var message = Encoding.UTF8.GetString(body);
-            _logger.LogInformation($"Mensagem recebida da fila: {message}");
-            // Aqui você pode processar a mensagem
-            _channel.BasicAck(ea.DeliveryTag, false);
+            try
+            {
+                var body = ea.Body.ToArray();
+                var message = Encoding.UTF8.GetString(body);
+                _logger.LogInformation($"Mensagem recebida da fila: {message}");
+                
+                // Processa a mensagem aqui
+                await ProcessMessageAsync(message);
+                
+                // Confirma o processamento da mensagem
+                await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                
+                _logger.LogInformation($"Mensagem processada com sucesso: {message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao processar mensagem");
+                
+                // Rejeita a mensagem em caso de erro
+                try
+                {
+                    await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
+                }
+                catch (Exception nackEx)
+                {
+                    _logger.LogError(nackEx, "Erro ao rejeitar mensagem");
+                }
+            }
         };
-        _channel.BasicConsume(queue: queueName, autoAck: false, consumer: consumer);
-        return Task.CompletedTask;
+
+        // Configura o consumer com autoAck: false para controle manual
+        await _channel.BasicConsumeAsync(queue: queueName, autoAck: false, consumer: consumer);
+        
+        // Mantém o serviço rodando
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await Task.Delay(1000, stoppingToken);
+        }
     }
 
-    public override void Dispose()
+    private async Task ProcessMessageAsync(string message)
     {
-        _channel?.Close();
-        _connection?.Close();
-        base.Dispose();
+        // Implemente aqui a lógica de processamento da mensagem
+        _logger.LogInformation($"Processando mensagem: {message}");
+        
+        // Simula algum processamento
+        await Task.Delay(100);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_channel != null)
+        {
+            await _channel.CloseAsync();
+            _channel.Dispose();
+        }
+
+        if (_connection != null)
+        {
+            await _connection.CloseAsync();
+            _connection.Dispose();
+        }
+
+        await Task.CompletedTask;
     }
 }
