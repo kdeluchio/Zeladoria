@@ -30,7 +30,7 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
     {
         try
         {
-            await InitializeConnectionAsync();
+            await InitializeConnectionWithRetryAsync(cancellationToken);
             await SetupConsumerAsync();
             _isConsuming = true;
             _logger.LogInformation("Serviço de consumo da fila iniciado com sucesso");
@@ -75,7 +75,7 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
         }
     }
 
-    private async Task InitializeConnectionAsync()
+    private async Task InitializeConnectionWithRetryAsync(CancellationToken cancellationToken)
     {
         var rabbitConfig = _configuration.GetSection("RabbitMQ");
         var factory = new ConnectionFactory()
@@ -85,18 +85,46 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
             Password = rabbitConfig["Password"]
         };
 
-        _connection = await factory.CreateConnectionAsync();
-        _channel = await _connection.CreateChannelAsync();
-        _queueName = rabbitConfig["QueueName"];
+        var maxRetries = 30; // Máximo de 30 tentativas
+        var baseDelay = 2000; // 2 segundos base
+        
+        for (int attempt = 1; attempt <= maxRetries; attempt++)
+        {
+            try
+            {
+                _logger.LogInformation($"Tentativa {attempt} de conectar ao RabbitMQ...");
+                
+                _connection = await factory.CreateConnectionAsync();
+                _channel = await _connection.CreateChannelAsync();
+                _queueName = rabbitConfig["QueueName"];
 
-        await _channel.QueueDeclareAsync(
-            queue: _queueName,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            arguments: null);
+                await _channel.QueueDeclareAsync(
+                    queue: _queueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: null);
 
-        _logger.LogInformation($"Conexão com RabbitMQ estabelecida. Fila: {_queueName}");
+                _logger.LogInformation($"Conexão com RabbitMQ estabelecida na tentativa {attempt}. Fila: {_queueName}");
+                return; // Sucesso, sai do loop
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"Tentativa {attempt} falhou: {ex.Message}");
+                
+                if (attempt == maxRetries)
+                {
+                    _logger.LogError($"Falha ao conectar ao RabbitMQ após {maxRetries} tentativas");
+                    throw;
+                }
+
+                // Delay exponencial: 2s, 4s, 8s, 16s, 32s, etc. (máximo 60s)
+                var delay = Math.Min(baseDelay * Math.Pow(2, attempt - 1), 60000);
+                _logger.LogInformation($"Aguardando {delay}ms antes da próxima tentativa...");
+                
+                await Task.Delay((int)delay, cancellationToken);
+            }
+        }
     }
 
     private async Task SetupConsumerAsync()
