@@ -32,10 +32,5 @@ public static class AuthEndpoints
             return result.ToHttpResult();
         });
 
-        routes.MapGet("/auth/user/{id}", async (string id, IAuthService authService) =>
-        {
-            var result = await authService.GetUserByIdAsync(id);
-            return result.ToHttpResult();
-        });
     }
 } 

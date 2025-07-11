@@ -1,7 +1,6 @@
 using ServiceOrder.Application.Models;
 using ServiceOrder.Domain.Interfaces;
 using ServiceOrder.Infra.Extensions;
-using Microsoft.AspNetCore.Authorization;
 
 namespace ServiceOrder.Presentation;
 

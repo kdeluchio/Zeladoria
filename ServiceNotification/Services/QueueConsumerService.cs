@@ -85,8 +85,8 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
             Password = rabbitConfig["Password"]
         };
 
-        var maxRetries = 30; // Máximo de 30 tentativas
-        var baseDelay = 2000; // 2 segundos base
+        var maxRetries = 30; 
+        var baseDelay = 2000; 
         
         for (int attempt = 1; attempt <= maxRetries; attempt++)
         {
@@ -106,7 +106,7 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
                     arguments: null);
 
                 _logger.LogInformation($"Conexão com RabbitMQ estabelecida na tentativa {attempt}. Fila: {_queueName}");
-                return; // Sucesso, sai do loop
+                return; 
             }
             catch (Exception ex)
             {
@@ -118,7 +118,6 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
                     throw;
                 }
 
-                // Delay exponencial: 2s, 4s, 8s, 16s, 32s, etc. (máximo 60s)
                 var delay = Math.Min(baseDelay * Math.Pow(2, attempt - 1), 60000);
                 _logger.LogInformation($"Aguardando {delay}ms antes da próxima tentativa...");
                 
@@ -167,7 +166,6 @@ public class QueueConsumerService : IQueueConsumerService, IDisposable
         {
             _logger.LogError(ex, "Erro ao processar mensagem");
             
-            // Rejeita a mensagem em caso de erro
             try
             {
                 if (_channel != null)

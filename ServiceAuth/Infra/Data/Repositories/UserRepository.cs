@@ -1,3 +1,4 @@
+using MongoDB.Bson;
 using MongoDB.Driver;
 using ServiceAuth.Domain.Entities;
 using ServiceAuth.Domain.Interfaces;
@@ -15,6 +16,9 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByIdAsync(string id)
     {
+        if (!ObjectId.TryParse(id, out ObjectId objectId))
+            return default;
+
         var filter = Builders<User>.Filter.Eq(u => u.Id, id);
         return await _users.Find(filter).FirstOrDefaultAsync();
     }

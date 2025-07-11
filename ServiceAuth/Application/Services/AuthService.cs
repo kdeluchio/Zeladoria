@@ -128,6 +128,7 @@ public class AuthService : IAuthService
 
         await _userRepository.UpdateAsync(user);
 
+        //Event asincrono para enviar o email
         await _producer.SendAsync(new QueueMessage(user.Email, resetToken));
 
         return Result<string>.Success($"Email enviado com o token");

@@ -23,12 +23,6 @@ public class Order
     public string Feedback { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
-    
-    // Propriedades para rastrear o usuário que criou e atualizou
-    public string? CreatedBy { get; set; }
-    public string? CreatedByEmail { get; set; }
-    public string? UpdatedBy { get; set; }
-    public string? UpdatedByEmail { get; set; }
 
     public Order(Customer customer, Service service, string description, string address, string numberAddress, double latitude, double longitude)
     {

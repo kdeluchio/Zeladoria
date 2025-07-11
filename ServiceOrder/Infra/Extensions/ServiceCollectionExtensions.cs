@@ -39,10 +39,8 @@ public static class ServiceCollectionExtensions
         services.AddValidatorsFromAssemblyContaining<CreateOrderModelValidator>();
         services.AddValidatorsFromAssemblyContaining<CreateServiceModelValidator>();
         
-        // Registrar HttpContextAccessor para acessar ClaimsPrincipal
         services.AddHttpContextAccessor();
         
-        // Registrar UserContextService para facilitar acesso aos dados do usuário
         services.AddScoped<IUserContextService, UserContextService>();
         
         return services;
