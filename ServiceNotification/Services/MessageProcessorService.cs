@@ -17,13 +17,9 @@ public class MessageProcessorService : IMessageProcessorService
     {
         try
         {
-            _logger.LogInformation($"Iniciando processamento da mensagem: {message}");
-
             var messageData = ParseMessage(message);
-            if (true)
-            {
+            _logger.LogInformation($"Evento lido da fila e enviado: {message}");
 
-            }
         }
         catch (Exception ex)
         {
