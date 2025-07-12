@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceAuth", "ServiceAuth\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceNotification", "ServiceNotification\ServiceNotification.csproj", "{B7739BA7-46A2-4AA7-8C95-F0708AFC303B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceNotification.UnitTests", "ServiceNotification.UnitTests\ServiceNotification.UnitTests.csproj", "{2950A35B-741D-4007-A11A-178E858129BF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceNotification.UnitTests", "ServiceNotification.UnitTests\ServiceNotification.UnitTests.csproj", "{2950A35B-741D-4007-A11A-178E858129BF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceAuth.IntegratedTests", "ServiceAuth.IntegratedTests\ServiceAuth.IntegratedTests.csproj", "{2A3B15B2-FA42-488C-AFE7-85981A929D2B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{2950A35B-741D-4007-A11A-178E858129BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2950A35B-741D-4007-A11A-178E858129BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2950A35B-741D-4007-A11A-178E858129BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A3B15B2-FA42-488C-AFE7-85981A929D2B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A3B15B2-FA42-488C-AFE7-85981A929D2B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A3B15B2-FA42-488C-AFE7-85981A929D2B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A3B15B2-FA42-488C-AFE7-85981A929D2B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

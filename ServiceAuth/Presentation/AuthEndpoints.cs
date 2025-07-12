@@ -20,9 +20,9 @@ public static class AuthEndpoints
             return result.ToCreatedResult($"/auth/user/{result.Value?.Id}");
         });
 
-        routes.MapPost("/auth/forgot-password", async (string email, IAuthService authService) =>
+        routes.MapPost("/auth/forgot-password", async (ForgotPasswordModel forgotModel, IAuthService authService) =>
         {
-            var result = await authService.ForgotPasswordAsync(email);
+            var result = await authService.ForgotPasswordAsync(forgotModel.Email);
             return result.ToHttpResult();
         });
 

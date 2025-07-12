@@ -178,9 +178,9 @@ public class AuthService : IAuthService
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var secretKey = jwtSettings["SecretKey"];
-        var issuer = jwtSettings["Issuer"] ;
-        var audience = jwtSettings["Audience"] ;
-        var expirationHours = int.Parse(jwtSettings["ExpirationHours"] );
+        var issuer = jwtSettings["Issuer"];
+        var audience = jwtSettings["Audience"];
+        var expirationHours = int.Parse(jwtSettings["ExpirationHours"]);
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -241,4 +241,4 @@ public class AuthService : IAuthService
             Phone = user.Phone
         };
     }
-} 
+}
