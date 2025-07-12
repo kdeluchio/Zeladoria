@@ -42,11 +42,11 @@ jobs:
     - name: Verificar se Docker está disponível
       run: |
         docker --version
-        docker-compose --version
+        docker compose version
         
     - name: Iniciar ambiente de teste
       run: |
-        docker-compose -f docker-compose.test.yml up -d
+        docker compose -f docker-compose.test.yml up -d
         
     - name: Aguardar serviços ficarem prontos
       run: |
@@ -65,13 +65,13 @@ jobs:
     - name: Limpar recursos
       if: always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.skip_cleanup != 'true')
       run: |
-        docker-compose -f docker-compose.test.yml down -v
+        docker compose -f docker-compose.test.yml down -v
         
     - name: Coletar logs dos containers (em caso de falha)
       if: failure()
       run: |
         mkdir -p container-logs
-        docker-compose -f docker-compose.test.yml logs > container-logs/docker-compose.log 2>&1 || true
+        docker compose -f docker-compose.test.yml logs > container-logs/docker-compose.log 2>&1 || true
         docker logs mongodb-test > container-logs/mongodb.log 2>&1 || true
         docker logs rabbitmq-test > container-logs/rabbitmq.log 2>&1 || true
         
