@@ -42,7 +42,7 @@ wait_for_services() {
     
     while [ $attempt -lt $max_attempts ]; do
         attempt=$((attempt + 1))
-        if curl -s http://localhost:27017 >/dev/null 2>&1; then
+        if docker exec mongodb-test mongosh --eval "db.adminCommand('ping')" >/dev/null 2>&1; then
             echo "✅ MongoDB está pronto!"
             break
         fi
@@ -62,7 +62,7 @@ wait_for_services() {
     
     while [ $attempt -lt $max_attempts ]; do
         attempt=$((attempt + 1))
-        if curl -s http://localhost:15672 >/dev/null 2>&1; then
+        if docker exec rabbitmq-test rabbitmq-diagnostics ping >/dev/null 2>&1; then
             echo "✅ RabbitMQ está pronto!"
             break
         fi

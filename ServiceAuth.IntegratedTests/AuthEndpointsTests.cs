@@ -69,7 +69,7 @@ public class AuthEndpointsTests : IClassFixture<ServiceAuthApiFactory>
         signupResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
 
         // Atualizar o ResetPasswordToken no MongoDB
-        var mongoClient = new MongoClient("mongodb://localhost:27017");
+        var mongoClient = new MongoClient("mongodb://admin:admin@localhost:27017");
         var database = mongoClient.GetDatabase("TestServiceAuthDb");
         var usersCollection = database.GetCollection<User>("Users");
 
