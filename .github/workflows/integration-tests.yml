@@ -67,16 +67,19 @@ jobs:
       run: |
         docker-compose -f docker-compose.test.yml down -v
         
-    - name: Upload logs dos containers (em caso de falha)
+    - name: Coletar logs dos containers (em caso de falha)
+      if: failure()
+      run: |
+        mkdir -p container-logs
+        docker-compose -f docker-compose.test.yml logs > container-logs/docker-compose.log 2>&1 || true
+        docker logs mongodb-test > container-logs/mongodb.log 2>&1 || true
+        docker logs rabbitmq-test > container-logs/rabbitmq.log 2>&1 || true
+        
+    - name: Upload logs dos containers
       if: failure()
       uses: actions/upload-artifact@v4
       with:
         name: container-logs
         path: |
           container-logs/
-        retention-days: 7
-      run: |
-        mkdir -p container-logs
-        docker-compose -f docker-compose.test.yml logs > container-logs/docker-compose.log 2>&1 || true
-        docker logs mongodb-test > container-logs/mongodb.log 2>&1 || true
-        docker logs rabbitmq-test > container-logs/rabbitmq.log 2>&1 || true 
+        retention-days: 7 
