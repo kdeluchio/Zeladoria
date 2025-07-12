@@ -1,0 +1,82 @@
+name: Testes Integrados
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      skip_cleanup:
+        description: 'Pular limpeza dos containers (para debug)'
+        required: false
+        default: 'false'
+        type: boolean
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+      
+    - name: Configurar .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Restaurar dependências
+      run: dotnet restore
+      
+    - name: Cache de dependências do .NET
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+          
+    - name: Verificar se Docker está disponível
+      run: |
+        docker --version
+        docker-compose --version
+        
+    - name: Iniciar ambiente de teste
+      run: |
+        docker-compose -f docker-compose.test.yml up -d
+        
+    - name: Aguardar serviços ficarem prontos
+      run: |
+        echo "Aguardando MongoDB ficar pronto..."
+        timeout 60 bash -c 'until docker exec mongodb-test mongosh --eval "db.adminCommand(\"ping\")" >/dev/null 2>&1; do sleep 2; done'
+        echo "MongoDB está pronto!"
+        
+        echo "Aguardando RabbitMQ ficar pronto..."
+        timeout 60 bash -c 'until docker exec rabbitmq-test rabbitmq-diagnostics ping >/dev/null 2>&1; do sleep 2; done'
+        echo "RabbitMQ está pronto!"
+        
+    - name: Executar testes integrados
+      run: |
+        dotnet test ServiceAuth.IntegratedTests/ServiceAuth.IntegratedTests.csproj --logger "console;verbosity=detailed" --no-restore
+        
+    - name: Limpar recursos
+      if: always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.skip_cleanup != 'true')
+      run: |
+        docker-compose -f docker-compose.test.yml down -v
+        
+    - name: Upload logs dos containers (em caso de falha)
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: container-logs
+        path: |
+          container-logs/
+        retention-days: 7
+      run: |
+        mkdir -p container-logs
+        docker-compose -f docker-compose.test.yml logs > container-logs/docker-compose.log 2>&1 || true
+        docker logs mongodb-test > container-logs/mongodb.log 2>&1 || true
+        docker logs rabbitmq-test > container-logs/rabbitmq.log 2>&1 || true 
