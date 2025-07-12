@@ -1,5 +1,6 @@
+using MongoDB.Driver;
 using ServiceAuth.Application.Models;
-using System;
+using ServiceAuth.Domain.Entities;
 using System.Net.Http.Json;
 
 namespace ServiceAuth.IntegratedTests;
@@ -67,9 +68,20 @@ public class AuthEndpointsTests : IClassFixture<ServiceAuthApiFactory>
         var signupResponse = await _client.PostAsJsonAsync("/auth/signup", signup);
         signupResponse.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
 
+        // Atualizar o ResetPasswordToken no MongoDB
+        var mongoClient = new MongoClient("mongodb://localhost:27017");
+        var database = mongoClient.GetDatabase("TestServiceAuthDb");
+        var usersCollection = database.GetCollection<User>("Users");
+
+        var filter = Builders<User>.Filter.Eq(u => u.Email, signup.Email);
+        var update = Builders<User>.Update
+            .Set(u => u.ResetPasswordToken, "token-fake")
+            .Set(u => u.ResetPasswordTokenExpiry, DateTime.UtcNow.AddHours(1));
+
+        await usersCollection.UpdateOneAsync(filter, update);
 
         var reset = new ResetPasswordModel {
-            Token = token,
+            Token = "token-fake",
             NewPassword = "NovaSenha@123",
             ConfirmPassword = "NovaSenha@123"
         };
