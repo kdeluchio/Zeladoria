@@ -98,14 +98,33 @@ docker-compose -f docker-compose.test.yml up -d
 # Aguardar serviços ficarem prontos
 wait_for_services
 
+# Executar testes unitários
+echo "🧪 Executando testes unitários..."
+if dotnet test ServiceNotification.UnitTests/ServiceNotification.UnitTests.csproj --logger "console;verbosity=detailed"; then
+    echo "✅ Todos os testes unitários passaram!"
+    unit_test_exit_code=0
+else
+    echo "❌ Alguns testes unitários falharam!"
+    unit_test_exit_code=1
+fi
+
 # Executar testes integrados
 echo "🧪 Executando testes integrados..."
 if dotnet test ServiceAuth.IntegratedTests/ServiceAuth.IntegratedTests.csproj --logger "console;verbosity=detailed"; then
-    echo "✅ Todos os testes passaram!"
-    test_exit_code=0
+    echo "✅ Todos os testes integrados passaram!"
+    integration_test_exit_code=0
 else
-    echo "❌ Alguns testes falharam!"
+    echo "❌ Alguns testes integrados falharam!"
+    integration_test_exit_code=1
+fi
+
+# Determinar código de saída final
+if [ $unit_test_exit_code -eq 0 ] && [ $integration_test_exit_code -eq 0 ]; then
+    test_exit_code=0
+    echo "✅ Todos os testes passaram!"
+else
     test_exit_code=1
+    echo "❌ Alguns testes falharam!"
 fi
 
 # Limpar recursos se não foi solicitado para pular
