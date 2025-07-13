@@ -108,18 +108,28 @@ else
     unit_test_exit_code=1
 fi
 
-# Executar testes integrados
-echo "🧪 Executando testes integrados..."
+# Executar testes integrados do ServiceAuth
+echo "🧪 Executando testes integrados do ServiceAuth..."
 if dotnet test ServiceAuth.IntegratedTests/ServiceAuth.IntegratedTests.csproj --logger "console;verbosity=detailed"; then
-    echo "✅ Todos os testes integrados passaram!"
-    integration_test_exit_code=0
+    echo "✅ Todos os testes integrados do ServiceAuth passaram!"
+    serviceauth_integration_test_exit_code=0
 else
-    echo "❌ Alguns testes integrados falharam!"
-    integration_test_exit_code=1
+    echo "❌ Alguns testes integrados do ServiceAuth falharam!"
+    serviceauth_integration_test_exit_code=1
+fi
+
+# Executar testes integrados do ServiceOrder
+echo "🧪 Executando testes integrados do ServiceOrder..."
+if dotnet test ServiceOrder.IntegratedTests/ServiceOrder.IntegratedTests.csproj --logger "console;verbosity=detailed"; then
+    echo "✅ Todos os testes integrados do ServiceOrder passaram!"
+    serviceorder_integration_test_exit_code=0
+else
+    echo "❌ Alguns testes integrados do ServiceOrder falharam!"
+    serviceorder_integration_test_exit_code=1
 fi
 
 # Determinar código de saída final
-if [ $unit_test_exit_code -eq 0 ] && [ $integration_test_exit_code -eq 0 ]; then
+if [ $unit_test_exit_code -eq 0 ] && [ $serviceauth_integration_test_exit_code -eq 0 ] && [ $serviceorder_integration_test_exit_code -eq 0 ]; then
     test_exit_code=0
     echo "✅ Todos os testes passaram!"
 else
