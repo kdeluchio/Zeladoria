@@ -2,7 +2,11 @@ using ServiceOrder.Infra.Extensions;
 using ServiceOrder.Presentation;
 using Microsoft.OpenApi.Models;
 
-var builder = WebApplication.CreateBuilder(args);
+public class Program
+{
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMongoDb(builder.Configuration);
 builder.Services.AddApplicationServices();
@@ -46,7 +50,9 @@ app.UseAuthorization();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapOrderEndpoints();
-app.MapServiceEndpoints();
+        app.MapOrderEndpoints();
+        app.MapServiceEndpoints();
 
-app.Run();
+        app.Run();
+    }
+}
