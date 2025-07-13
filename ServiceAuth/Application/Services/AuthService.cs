@@ -20,6 +20,7 @@ public class AuthService : IAuthService
     private readonly IValidator<ResetPasswordModel> _resetPasswordValidator;
     private readonly IConfiguration _configuration;
     private readonly IQueueProducerService _producer;
+    private readonly JwtTokenGenerator _jwtTokenGenerator;
 
     public AuthService(
         IUserRepository userRepository,
@@ -27,7 +28,8 @@ public class AuthService : IAuthService
         IValidator<SignupModel> signupValidator,
         IValidator<ResetPasswordModel> resetPasswordValidator,
         IConfiguration configuration,
-        IQueueProducerService producer)
+        IQueueProducerService producer,
+        JwtTokenGenerator jwtTokenGenerator)
     {
         _userRepository = userRepository;
         _loginValidator = loginValidator;
@@ -35,6 +37,7 @@ public class AuthService : IAuthService
         _resetPasswordValidator = resetPasswordValidator;
         _configuration = configuration;
         _producer = producer;
+        _jwtTokenGenerator = jwtTokenGenerator;
     }
 
     public async Task<Result<LoginResponseModel>> LoginAsync(LoginModel loginModel)
@@ -65,11 +68,11 @@ public class AuthService : IAuthService
         }
 
         var userResponse = MapToUserResponse(user);
-        var token = await GenerateJwtTokenAsync(userResponse);
+        var token = _jwtTokenGenerator.GenerateToken(userResponse);
 
         return Result<LoginResponseModel>.Success(new LoginResponseModel
         {
-            Token = token.Value!,
+            Token = token,
             User = userResponse
         });
     }
@@ -174,36 +177,7 @@ public class AuthService : IAuthService
             : Result<UserResponseModel>.NotFound($"Usuário com ID {id} não encontrado");
     }
 
-    private async Task<Result<string>> GenerateJwtTokenAsync(UserResponseModel user)
-    {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
-        var secretKey = jwtSettings["SecretKey"];
-        var issuer = jwtSettings["Issuer"];
-        var audience = jwtSettings["Audience"];
-        var expirationHours = int.Parse(jwtSettings["ExpirationHours"]);
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
-        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var claims = new[]
-        {
-            new Claim(ClaimTypes.NameIdentifier, user.Id),
-            new Claim(ClaimTypes.Name, user.Name),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, user.Role)
-        };
-
-        var token = new JwtSecurityToken(
-            issuer: issuer,
-            audience: audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddHours(expirationHours),
-            signingCredentials: credentials
-        );
-
-        var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
-        return Result<string>.Success(tokenString);
-    }
 
     private static string HashPassword(string password)
     {

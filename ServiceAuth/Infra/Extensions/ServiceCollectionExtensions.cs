@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IQueueProducerService, QueueProducerService>();
+        services.AddScoped<JwtTokenGenerator>();
         services.AddFluentValidationAutoValidation();
         services.AddValidatorsFromAssemblyContaining<LoginModelValidator>();
         services.AddValidatorsFromAssemblyContaining<SignupModelValidator>();

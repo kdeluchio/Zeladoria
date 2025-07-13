@@ -1,6 +1,8 @@
 using ServiceAuth.Infra.Extensions;
 using ServiceAuth.Presentation;
 
+namespace ServiceAuth;
+
 public class Program
 {
     public static void Main(string[] args)

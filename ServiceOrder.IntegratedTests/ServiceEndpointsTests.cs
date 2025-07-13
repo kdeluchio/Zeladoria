@@ -17,8 +17,21 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     }
 
     [Fact]
+    public async Task GetAllServices_SemToken_DeveRetornar401()
+    {
+        // Remove qualquer header de autorização que possa estar definido
+        _client.DefaultRequestHeaders.Authorization = null;
+        
+        var response = await _client.GetAsync("/service");
+        response.StatusCode.Should().Be(System.Net.HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task GetAllServices_DeveRetornar200()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         var response = await _client.GetAsync("/service");
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.OK);
     }
@@ -26,6 +39,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task GetServiceById_DeveRetornar200ParaIdValido()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         // Primeiro cria um serviço
         var service = CreateService();
         var serviceResponse = await _client.PostAsJsonAsync("/service", service);
@@ -41,6 +57,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task GetServiceById_DeveRetornar404ParaIdInvalido()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         var response = await _client.GetAsync("/service/invalid-id");
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
     }
@@ -48,6 +67,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task CreateService_DeveCriarServicoERetornar201()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         var service = CreateService();
         var response = await _client.PostAsJsonAsync("/service", service);
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.Created);
@@ -60,6 +82,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task UpdateService_DeveAtualizarServicoERetornar200()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         // Primeiro cria um serviço
         var service = CreateService();
         var serviceResponse = await _client.PostAsJsonAsync("/service", service);
@@ -79,6 +104,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task UpdateService_DeveRetornar404ParaIdInvalido()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         var service = CreateService();
         var response = await _client.PutAsJsonAsync("/service/invalid-id", service);
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
@@ -87,6 +115,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task DeleteService_DeveDeletarServicoERetornar204()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         // Primeiro cria um serviço
         var service = CreateService();
         var serviceResponse = await _client.PostAsJsonAsync("/service", service);
@@ -102,6 +133,9 @@ public class ServiceEndpointsTests : IClassFixture<ServiceOrderApiFactory>
     [Fact]
     public async Task DeleteService_DeveRetornar404ParaIdInvalido()
     {
+        var token = JwtTokenHelper.GenerateTestToken();
+        _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+        
         var response = await _client.DeleteAsync("/service/invalid-id");
         response.StatusCode.Should().Be(System.Net.HttpStatusCode.NotFound);
     }

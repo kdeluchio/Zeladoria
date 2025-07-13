@@ -90,15 +90,15 @@ public class OrderService : IOrderService
             return Result<OrderResponseModel>.Failure(validationErrors, ErrorType.Validation);
         }
 
+        var order = await _orderRepository.GetByIdAsync(id);
+        if (order == null)
+            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
+
         var service = await _serviceRepository.GetByIdAsync(request.ServiceId);
         if (service == null)
         {
             return Result<OrderResponseModel>.Failure("Servico nao cadastrado", ErrorType.Validation);
         }
-
-        var order = await _orderRepository.GetByIdAsync(id);
-        if (order == null)
-            return Result<OrderResponseModel>.NotFound($"Pedido com ID {id} não encontrado");
 
         var updateResult = order.TryUpdate(request.Description, request.Address, request.NumberAddress, request.Latitude, request.Longitude);
         if (!updateResult.IsSuccess)

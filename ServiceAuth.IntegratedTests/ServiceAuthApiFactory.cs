@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 
 namespace ServiceAuth.IntegratedTests;
 
-public class ServiceAuthApiFactory : WebApplicationFactory<Program>
+public class ServiceAuthApiFactory : WebApplicationFactory<ServiceAuth.Program>
 {
     static ServiceAuthApiFactory()
     {

@@ -2,6 +2,8 @@ using ServiceOrder.Infra.Extensions;
 using ServiceOrder.Presentation;
 using Microsoft.OpenApi.Models;
 
+namespace ServiceOrder;
+
 public class Program
 {
     public static void Main(string[] args)
