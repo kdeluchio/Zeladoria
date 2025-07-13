@@ -71,9 +71,13 @@ jobs:
       run: |
         dotnet test ServiceNotification.UnitTests/ServiceNotification.UnitTests.csproj --logger "console;verbosity=detailed" --no-restore
         
-    - name: Executar testes integrados
+    - name: Executar testes integrados do ServiceAuth
       run: |
         dotnet test ServiceAuth.IntegratedTests/ServiceAuth.IntegratedTests.csproj --logger "console;verbosity=detailed" --no-restore
+        
+    - name: Executar testes integrados do ServiceOrder
+      run: |
+        dotnet test ServiceOrder.IntegratedTests/ServiceOrder.IntegratedTests.csproj --logger "console;verbosity=detailed" --no-restore
         
     - name: Limpar recursos
       if: always() && (github.event_name != 'workflow_dispatch' || github.event.inputs.skip_cleanup != 'true')
