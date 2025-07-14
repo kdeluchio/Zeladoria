@@ -30,8 +30,7 @@ services:
       - zeladoria-net
       
   servicenotification:
-    build:
-      context: ./ServiceNotification
+    image: kdeluchio/servicenotification:latest
     container_name: servicenotification
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -46,8 +45,7 @@ services:
       - zeladoria-net
       
   serviceorderapi:
-    build:
-      context: ./ServiceOrder
+    image: kdeluchio/serviceorder:latest
     container_name: serviceorderapi
     ports:
       - "5011:5011"
@@ -59,8 +57,7 @@ services:
       - zeladoria-net
 
   serviceauthapi:
-    build:
-      context: ./ServiceAuth
+    image: kdeluchio/serviceauth:latest
     container_name: serviceauthapi
     ports:
       - "5021:5021"
