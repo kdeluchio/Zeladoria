@@ -4,7 +4,7 @@ Sistema de zeladoria urbana onde o cidadão pode apontar problemas e sugestões 
 
 ## Funcionalidades 
 ### Entregues
-- Web site backoffice 
+- Apis web 
 	- Controle de ordens de serviço 
 	- Autenticação de usuários
 	- Mensageria para comunicação com os usuários
@@ -20,7 +20,8 @@ Sistema de zeladoria urbana onde o cidadão pode apontar problemas e sugestões 
 
 - Web site backoffice 
 	- Análise de dados e inteligência artificial para gerar insights e previsões de cenários 
-	- Mapa de calor para gerenciamento dos problemas 
+	- Mapa de calor para gerenciamento dos problemas
+	- Interface com o usuário
 
 - Apis web 
 	- Acesso a dados não sigilosos 
