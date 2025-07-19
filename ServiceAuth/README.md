@@ -8,56 +8,43 @@ Serviço de autenticação responsável por gerenciar usuários e autenticação
 - **Signup**: Cadastro de novos usuários
 - **Forgot Password**: Solicitação de reset de senha via RabbitMQ
 - **Reset Password**: Reset de senha com token
-- **Get User**: Consulta de usuário por ID
 
-## Configuração
+## Tecnologias
 
-### RabbitMQ
+- `.NET 8`
+- `Docker`
+- `Microsoft.AspNetCore.Authentication.JwtBearer`
+- `System.IdentityModel.Tokens.Jwt`
+- `MongoDB.Driver`
+- `RabbitMQ`
+- `FluentValidation.AspNetCore`
+- `Swashbuckle.AspNetCore`
 
-O serviço utiliza RabbitMQ para enviar mensagens de reset de senha. As configurações estão em `appsettings.json`:
+## Pré-requisitos
 
-```json
-{
-  "RabbitMQSettings": {
-    "HostName": "rabbitmq",
-    "Port": 5672,
-    "UserName": "guest",
-    "Password": "guest",
-    "VirtualHost": "/"
-  }
-}
+- [Docker](https://www.docker.com/)
+
+## Instalação
+
+```bash
+git clone https://github.com/kdeluchio/Zeladoria.git 
+cd Zeladoria
+docker-compose up --build -d 
 ```
 
-### QueueProducerService
+## RabbitMQ
 
-A classe `QueueProducerService` é responsável por enviar mensagens para a fila `forgot-password` do RabbitMQ.
-
-#### Uso
-
-```csharp
-// Injeção de dependência
-public class AuthService
-{
-    private readonly IQueueProducerService _producer;
-    
-    public AuthService(IQueueProducerService producer)
-    {
-        _producer = producer;
-    }
-    
-    public async Task ForgotPasswordAsync(string email)
-    {
-        // ... lógica de negócio ...
-        
-        // Envia mensagem para a fila
-        await _producer.SendAsync(new QueueMessage(email, resetToken));
-    }
-}
+O serviço utiliza RabbitMQ para enviar mensagens de reset de senha. 
+Acesse o RabbitMQ UI `http://localhost:5672` para monitorar as mensagens produzidas.
+```
+ "UserName": "guest",
+ "Password": "guest",
 ```
 
-#### Formato da Mensagem
+### Queue
 
-A mensagem enviada para a fila `forgot-password` tem o seguinte formato:
+É enviado mensagens para a fila `forgot-password` do RabbitMQ toda vez que o usuário esqueceu a senha e geramos um token que é enviado via e-mail.
+- Corpo da mensagem:
 
 ```json
 {
@@ -66,47 +53,8 @@ A mensagem enviada para a fila `forgot-password` tem o seguinte formato:
 }
 ```
 
-## Endpoints
+## Teste a API
 
-### POST /auth/login
-Autentica um usuário e retorna um token JWT.
+### Swagger UI
 
-### POST /auth/signup
-Cadastra um novo usuário.
-
-### POST /auth/forgot-password
-Solicita reset de senha. Envia mensagem para a fila `forgot-password`.
-
-### POST /auth/reset-password
-Reseta a senha usando o token recebido.
-
-### GET /auth/user/{id}
-Consulta um usuário por ID.
-
-## Execução
-
-```bash
-# Desenvolvimento local
-dotnet run
-
-# Docker
-docker-compose up serviceauthapi
-```
-
-## Dependências
-
-- MongoDB: Armazenamento de usuários
-- RabbitMQ: Envio de mensagens de reset de senha
-- JWT: Autenticação e autorização
-
-## Arquitetura
-
-```
-AuthService
-    ↓
-QueueProducerService (RabbitMQ)
-    ↓
-Fila: forgot-password
-    ↓
-ServiceNotification (Consumidor)
-```
+Acesse o Swagger UI em `http://localhost:5021/swagger` para testar a API com interface gráfica. Nenhuma rota desse serviço é necessário possuir autenticação.
